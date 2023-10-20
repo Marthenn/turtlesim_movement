@@ -1,0 +1,9 @@
+float32 length
+float32 width
+---
+bool success
+---
+float32 x
+float32 y
+int32 seq  # 0: going left, 1: going down, 2: going right, 3: going up
+float32 remaining_distance
