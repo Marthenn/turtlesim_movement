@@ -9,12 +9,18 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(turtlesim REQUIRED)
+find_package(geometry_msgs REQUIRED)
 
+# add executables
 add_executable(poseSubscriber src/PoseSubscriber.cpp)
 ament_target_dependencies(poseSubscriber rclcpp turtlesim)
 
+add_executable(movePublisher src/MovementPublisher.cpp)
+ament_target_dependencies(movePublisher rclcpp turtlesim geometry_msgs)
+
+# create install targets
 install(
-    TARGETS poseSubscriber
+    TARGETS poseSubscriber movePublisher
     DESTINATION lib/${PROJECT_NAME}
 )
 
