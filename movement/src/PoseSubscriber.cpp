@@ -11,11 +11,14 @@ public:
   }
 
   float getX() { return x; }
+
   float getY() { return y; }
+
   float getTheta() { return theta; }
 
 private:
   float x, y, theta;
+
   void callback(const turtlesim::msg::Pose::SharedPtr msg) {
     x = msg->x;
     y = msg->y;
@@ -24,10 +27,3 @@ private:
 
   rclcpp::Subscription<turtlesim::msg::Pose>::SharedPtr subscription_;
 };
-
-int main(){
-  rclcpp::init(0, nullptr);
-  rclcpp::spin(std::make_shared<PoseSubscriber>());
-  rclcpp::shutdown();
-  return 0;
-}
