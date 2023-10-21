@@ -24,26 +24,31 @@ ament_target_dependencies(movePublisher rclcpp turtlesim geometry_msgs)
 add_executable(thetaService src/srvExec.cpp src/ThetaServer.cpp)
 ament_target_dependencies(thetaService rclcpp turtlesim interfaces)
 
-add_library(action_coordinate SHARED
-        src/coorServer.cpp
-)
-target_include_directories(action_coordinate PRIVATE
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-        $<INSTALL_INTERFACE:include>)
-target_compile_definitions(action_coordinate PRIVATE "ACTION_COORDINATE_CPP_DLL")
-ament_target_dependencies(action_coordinate rclcpp rclcpp_action rclcpp_components turtlesim interfaces geometry_msgs)
-rclcpp_components_register_nodes(action_coordinate "action_coordinate::CoordinateAction")
-
 # create install targets
 install(
         TARGETS poseSubscriber movePublisher thetaService
         DESTINATION lib/${PROJECT_NAME}
 )
-install(
-        TARGETS action_coordinate
+
+# action
+add_library(action_coordinate SHARED
+        src/coorServer.cpp)
+target_include_directories(action_coordinate PRIVATE
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<INSTALL_INTERFACE:include>)
+target_compile_definitions(action_coordinate
+        PRIVATE "ACTION_COORDINATE_CPP_BUILDING_DLL")
+ament_target_dependencies(action_coordinate
+        "interfaces"
+        "geometry_msgs"
+        "rclcpp"
+        "rclcpp_action"
+        "rclcpp_components")
+rclcpp_components_register_node(action_server PLUGIN "action_coordinate_cpp::CoordinateAction" EXECUTABLE action_coordinate)
+install(TARGETS
+        action_coordinate
         ARCHIVE DESTINATION lib
         LIBRARY DESTINATION lib
-        RUNTIME DESTINATION bin
-)
+        RUNTIME DESTINATION bin)
 
 ament_package()
