@@ -41,10 +41,11 @@ target_compile_definitions(action_coordinate
 ament_target_dependencies(action_coordinate
         "interfaces"
         "geometry_msgs"
+        "turtlesim"
         "rclcpp"
         "rclcpp_action"
         "rclcpp_components")
-rclcpp_components_register_node(action_server PLUGIN "action_coordinate_cpp::CoordinateAction" EXECUTABLE action_coordinate)
+rclcpp_components_register_node(action_coordinate PLUGIN "action_coordinate_cpp::CoordinateAction" EXECUTABLE action_coordinate_server)
 install(TARGETS
         action_coordinate
         ARCHIVE DESTINATION lib
