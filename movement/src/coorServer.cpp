@@ -26,7 +26,8 @@ namespace action_coordinate_cpp {
           std::bind(&CoordinateAction::handle_accepted, this, std::placeholders::_1)
       );
       theta_client_ = this->create_client<interfaces::srv::CalculateAngle>("calculate_angle");
-      rotate_client_ = rclcpp_action::create_client<turtlesim::action::RotateAbsolute>(this, "rotate_absolute");
+      rotate_client_ = rclcpp_action::create_client<turtlesim::action::RotateAbsolute>(this,
+                                                                                       "/turtle1/rotate_absolute");
     }
 
   private:
@@ -64,8 +65,8 @@ namespace action_coordinate_cpp {
       movement_publisher_ = std::make_shared<MovementPublisher>();
 
       // set parameter of linear velocity
-      this->set_parameter(rclcpp::Parameter("linear_velocity", 0.5)); // slow = easier to control
-      this->set_parameter(rclcpp::Parameter("angular_velocity", 0)); // no angular velocity
+      movement_publisher_->set_parameter(rclcpp::Parameter("linear_velocity", 0.5)); // slow = easier to control
+      movement_publisher_->set_parameter(rclcpp::Parameter("angular_velocity", 0)); // no angular velocity
 
       RCLCPP_INFO(this->get_logger(), "Executing goal");
       rclcpp::Rate loop_rate(1);
@@ -77,35 +78,31 @@ namespace action_coordinate_cpp {
       auto request = std::make_shared<interfaces::srv::CalculateAngle::Request>();
       request->x = goal->x;
       request->y = goal->y;
-      auto future = theta_client_->async_send_request(request);
-      if (rclcpp::spin_until_future_complete(this->get_node_base_interface(), future) !=
-          rclcpp::FutureReturnCode::SUCCESS) {
+      auto theta = theta_client_->async_send_request(request).get();
+
+      if (!theta) {
         RCLCPP_ERROR(this->get_logger(), "Failed to get theta");
         result->success = false;
         goal_handle->succeed(result);
         return;
       }
 
-      // get theta from service
-      float theta = future.get()->theta;
+      float rotation = theta->theta;
 
       // rotate to theta using service
       auto rotate_goal = turtlesim::action::RotateAbsolute::Goal();
-      rotate_goal.theta = theta;
-      auto rotate_future = rotate_client_->async_send_goal(rotate_goal);
+      rotate_goal.theta = rotation;
+      RCLCPP_INFO(this->get_logger(), "Rotating to theta: %f", rotation);
+      auto rotate_result = rotate_client_->async_send_goal(rotate_goal).get();
 
-      RCLCPP_INFO(this->get_logger(), "Rotating to theta: %f", theta);
-
-      // wait for rotation to finish
-      if (rclcpp::spin_until_future_complete(this->get_node_base_interface(), rotate_future) !=
-          rclcpp::FutureReturnCode::SUCCESS) {
+      if (!rotate_result) {
         RCLCPP_ERROR(this->get_logger(), "Failed to rotate");
         result->success = false;
         goal_handle->succeed(result);
         return;
       }
 
-      RCLCPP_INFO(this->get_logger(), "Rotated to theta: %f", theta);
+      RCLCPP_INFO(this->get_logger(), "Rotated to theta: %f", rotation);
       RCLCPP_INFO(this->get_logger(), "Moving to x: %f, y: %f", goal->x, goal->y);
 
       // move to goal
@@ -119,8 +116,8 @@ namespace action_coordinate_cpp {
       }
 
       // stop moving
-      this->set_parameter(rclcpp::Parameter("linear_velocity", 0));
-      this->set_parameter(rclcpp::Parameter("angular_velocity", 0));
+      movement_publisher_->set_parameter(rclcpp::Parameter("linear_velocity", 0));
+      movement_publisher_->set_parameter(rclcpp::Parameter("angular_velocity", 0));
 
       // set result
       result->success = true;
