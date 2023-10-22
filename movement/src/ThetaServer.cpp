@@ -16,13 +16,32 @@ public:
 private:
   void callback(const std::shared_ptr <interfaces::srv::CalculateAngle::Request> request,
                 std::shared_ptr <interfaces::srv::CalculateAngle::Response> response) {
-    float x = pose_subscriber_->getX();
-    float y = pose_subscriber_->getY();
+    float curr_x = pose_subscriber_->getX();
+    float curr_y = pose_subscriber_->getY();
+    float goal_x = request->x;
+    float goal_y = request->y;
 
-    float deltaX = request->x - x;
-    float deltaY = request->y - y;
+    // handling for division by zero and third quadrant (returned in radian)
+    if (goal_x - curr_x == 0) {
+      if (goal_y - curr_y > 0) {
+        response->theta = 1.5708;
+      } else {
+        response->theta = -1.5708;
+      }
+    } else {
+      response->theta = atan((goal_y - curr_y) / (goal_x - curr_x));
+    }
 
-    response->theta = atan2(deltaY, deltaX);
+    if (goal_x - curr_x < 0 && goal_y - curr_y < 0) {
+      response->theta += 3.14159;
+    }
+
+    if (response->theta < 0) {
+      response->theta += 6.28319;
+    }
+    if (response->theta > 6.28319) {
+      response->theta -= 6.28319;
+    }
   }
 
   rclcpp::Service<interfaces::srv::CalculateAngle>::SharedPtr service_;
