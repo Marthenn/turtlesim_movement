@@ -18,10 +18,6 @@ public:
     timer_ = this->create_wall_timer(std::chrono::seconds(1), std::bind(&MovementPublisher::timer_callback, this));
   }
 
-  void publish() {
-    timer_callback();
-  }
-
 private:
   void timer_callback() {
     // create a message for the velocities
