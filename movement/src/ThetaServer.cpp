@@ -21,6 +21,9 @@ private:
     float goal_x = request->x;
     float goal_y = request->y;
 
+    RCLCPP_INFO(this->get_logger(), "Received request with x: %f, y: %f", goal_x, goal_y);
+    RCLCPP_INFO(this->get_logger(), "Current position is x: %f, y: %f", curr_x, curr_y);
+
     // handling for division by zero and third quadrant (returned in radian)
     if (goal_x - curr_x == 0) {
       if (goal_y - curr_y > 0) {
@@ -42,6 +45,8 @@ private:
     if (response->theta > 6.28319) {
       response->theta -= 6.28319;
     }
+
+    RCLCPP_INFO(this->get_logger(), "Sending response with theta: %f", response->theta);
   }
 
   rclcpp::Service<interfaces::srv::CalculateAngle>::SharedPtr service_;
