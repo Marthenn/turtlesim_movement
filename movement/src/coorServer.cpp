@@ -108,7 +108,6 @@ namespace action_coordinate_cpp {
       // move to goal
       while (!isGoalReached(pose_subscriber_->getX(), pose_subscriber_->getY(), goal->x, goal->y)) {
         RCLCPP_INFO(this->get_logger(), "Current x: %f, y: %f", pose_subscriber_->getX(), pose_subscriber_->getY());
-        movement_publisher_->publish();
         feedback->x = pose_subscriber_->getX();
         feedback->y = pose_subscriber_->getY();
         goal_handle->publish_feedback(feedback);
@@ -135,3 +134,17 @@ namespace action_coordinate_cpp {
 }
 
 RCLCPP_COMPONENTS_REGISTER_NODE(action_coordinate_cpp::CoordinateAction);
+
+int main() {
+  rclcpp::init(0, nullptr);
+
+  auto pose_subscriber = std::make_shared<PoseSubscriber>();
+  auto movement_publisher = std::make_shared<MovementPublisher>();
+
+  while (rclcpp::ok()) {
+    rclcpp::spin_some(pose_subscriber);
+    rclcpp::spin_some(movement_publisher);
+  }
+  rclcpp::shutdown();
+  return 0;
+}
